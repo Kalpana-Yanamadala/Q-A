@@ -14,6 +14,40 @@
 **A:** Use Azure Pipelines to define CI/CD in YAML. Connect to a Git repo, define build tasks, add stages for deployment.
 **Evaluation:** Familiarity with build/release stages, basic YAML syntax.
 
+    trigger:
+    - main
+    
+    pool:
+      vmImage: 'ubuntu-latest'
+    
+    variables:
+      imageName: 'mydotnetapp'
+    
+    steps:
+    - task: UseDotNet@2
+      inputs:
+        packageType: 'sdk'
+        version: '6.0.x'
+        installationPath: $(Agent.ToolsDirectory)/dotnet
+    
+    - task: DotNetCoreCLI@2
+      inputs:
+        command: 'build'
+        projects: '**/*.csproj'
+    
+    - task: Docker@2
+      inputs:
+        containerRegistry: '$(dockerRegistryServiceConnection)'
+        repository: '$(imageName)'
+        command: 'buildAndPush'
+        Dockerfile: '**/Dockerfile'
+        tags: '$(Build.BuildId)'
+    
+    - task: AzureWebAppContainer@1
+      inputs:
+        appName: 'my-dotnet-webapp'
+        containers: '$(imageName):$(Build.BuildId)'
+
 #### 2. Scripting & Automation Basics
 
 **Q:** Can you write a simple PowerShell script to stop/start an Azure VM?
